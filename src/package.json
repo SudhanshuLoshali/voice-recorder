@@ -1,0 +1,10 @@
+{
+  "name": "voice-recorder",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo \"Building project...\""
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

@@ -1,0 +1,141 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'Resources Stack'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, qa]
+  BucketPrefix:
+    Type: String
+    Default: voice-recorder
+
+Resources:
+  # S3 Bucket for storing audio files
+  AudioBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${BucketPrefix}-${Environment}-${AWS::AccountId}
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT, POST, DELETE]
+            AllowedOrigins: ['*']  # Replace with your frontend domain in production
+            MaxAge: 3000
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteTempFiles
+            Prefix: temp/
+            Status: Enabled
+            ExpirationInDays: 1
+
+  # Lambda Execution Role
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !GetAtt AudioBucket.Arn
+                  - !Sub ${AudioBucket.Arn}/*
+
+  # API Gateway
+  VoiceRecorderApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub voice-recorder-api-${Environment}
+      Description: Voice Recorder API
+      EndpointConfiguration:
+        Types: [REGIONAL]
+
+  # API Gateway Resource and Methods
+  AudioResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref VoiceRecorderApi
+      ParentId: !GetAtt VoiceRecorderApi.RootResourceId
+      PathPart: audio
+
+  # Lambda Functions
+  AddAudioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/handlers
+      Handler: addAudio.handler
+      Runtime: nodejs18.x
+      MemorySize: 256
+      Timeout: 180
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref AudioBucket
+          ENVIRONMENT: !Ref Environment
+
+  MergeAudioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/handlers
+      Handler: mergeAudio.handler
+      Runtime: nodejs18.x
+      MemorySize: 512
+      Timeout: 180
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref AudioBucket
+          ENVIRONMENT: !Ref Environment
+
+  GetAudioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/handlers
+      Handler: getAudio.handler
+      Runtime: nodejs18.x
+      MemorySize: 256
+      Timeout: 180
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref AudioBucket
+          ENVIRONMENT: !Ref Environment
+
+  DeleteAudioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/handlers
+      Handler: deleteAudio.handler
+      Runtime: nodejs18.x
+      MemorySize: 256
+      Timeout: 180
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref AudioBucket
+          ENVIRONMENT: !Ref Environment
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${VoiceRecorderApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
+  BucketName:
+    Description: S3 Bucket Name
+    Value: !Ref AudioBucket

@@ -1,0 +1,34 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - npm install -g aws-cdk
+      - pip install aws-sam-cli
+      
+  pre_build:
+    commands:
+      - cd src
+      - npm install
+      
+  build:
+    commands:
+      - npm run build
+      - cd ..
+      
+  post_build:
+    commands:
+      - sam package 
+          --template-file cloudformation/resources.yaml 
+          --s3-bucket ${ARTIFACT_BUCKET} 
+          --output-template-file packaged.yaml
+
+artifacts:
+  files:
+    - packaged.yaml
+    - appspec.yml
+    - cloudformation/*
+    - dist/**/*
+  discard-paths: no
