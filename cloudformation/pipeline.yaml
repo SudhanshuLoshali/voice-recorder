@@ -219,7 +219,6 @@ Resources:
                 Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
                 ParameterOverrides: |
                   {
-                    "Environment": "${Environment}",
                     "ArtifactBucket": "${ArtifactBucket}"
                   }
               InputArtifacts:
