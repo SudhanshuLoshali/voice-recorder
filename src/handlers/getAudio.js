@@ -11,6 +11,8 @@ exports.handler = async (event) => {
         statusCode: 400,
         headers: {
           'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'OPTIONS,POST,GET,PUT,DELETE',
+          'Access-Control-Allow-Headers': '*',
           'Access-Control-Allow-Credentials': true,
         },
         body: JSON.stringify({ error: 'Missing sessionId parameter' })
@@ -28,6 +30,8 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers: {
         'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET,PUT,DELETE',
+        'Access-Control-Allow-Headers': '*',
         'Access-Control-Allow-Credentials': true,
       },
       body: JSON.stringify({
@@ -40,6 +44,8 @@ exports.handler = async (event) => {
       statusCode: 500,
       headers: {
         'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET,PUT,DELETE',
+        'Access-Control-Allow-Headers': '*',
         'Access-Control-Allow-Credentials': true,
       },
       body: JSON.stringify({ error: 'Failed to retrieve audio file' })
