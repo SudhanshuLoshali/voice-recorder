@@ -218,7 +218,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref AddAudioFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${VoiceRecorderApi}/*/*/*
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${VoiceRecorderApi}/${Environment}/POST/audio/add
 
   MergeAudioPermission:
     Type: AWS::Lambda::Permission
@@ -226,7 +226,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref MergeAudioFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${VoiceRecorderApi}/*/*/*
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${VoiceRecorderApi}/${Environment}/PUT/audio/merge
 
   GetAudioPermission:
     Type: AWS::Lambda::Permission
@@ -234,7 +234,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref GetAudioFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${VoiceRecorderApi}/*/*/*
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${VoiceRecorderApi}/${Environment}/GET/audio/retrieve
 
   DeleteAudioPermission:
     Type: AWS::Lambda::Permission
@@ -242,7 +242,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref DeleteAudioFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${VoiceRecorderApi}/*/*/*
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${VoiceRecorderApi}/${Environment}/DELETE/audio/remove
 
   ApiStage:
     Type: AWS::ApiGateway::Stage
