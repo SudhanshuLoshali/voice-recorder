@@ -12,16 +12,42 @@ phases:
     commands:
       - cd src
       - npm install
+      - cd ..
+
+      # Create FFmpeg layer
+      - mkdir -p ffmpeg-layer/nodejs/bin
+      - cd ffmpeg-layer
+      - wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+      - tar xf ffmpeg-release-amd64-static.tar.xz
+      - cp ffmpeg-*-amd64-static/ffmpeg nodejs/bin/
+      - chmod 755 nodejs/bin/ffmpeg
+
+      # Create package.json for the layer
+      - |
+        echo '{
+          "name": "ffmpeg-layer",
+          "version": "1.0.0",
+          "description": "FFmpeg binaries for Lambda",
+          "main": "index.js"
+        }' > nodejs/package.json
+
+      # Create layer.zip
+      - zip -r ffmpeg-layer.zip nodejs/
+
+      # Upload layer to S3
+      - aws s3 cp ffmpeg-layer.zip s3://${ARTIFACT_BUCKET}/ffmpeg-layer.zip
+      - cd ..
       
   build:
     commands:
+      - cd src
       - npm run build
       - cd ..
+      - sam build -t cloudformation/resources.yaml
       
   post_build:
     commands:
-      - sam package 
-          --template-file cloudformation/resources.yaml 
+      - sam package
           --s3-bucket ${ARTIFACT_BUCKET} 
           --output-template-file packaged.yaml
 
@@ -32,3 +58,7 @@ artifacts:
     - cloudformation/*
     - dist/**/*
   discard-paths: no
+
+cache:
+  paths:
+    - 'src/node_modules/**/*'

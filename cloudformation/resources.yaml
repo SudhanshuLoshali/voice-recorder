@@ -10,13 +10,15 @@ Parameters:
   BucketPrefix:
     Type: String
     Default: voice-recorder
+  ArtifactBucket:
+    Type: String
+    Description: Pipeline artifact bucket name
 
 Resources:
-  # S3 Bucket for storing audio files
   AudioBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub ${BucketPrefix}-${Environment}-${AWS::AccountId}
+      BucketName: !Sub ${BucketPrefix}-${Environment}-${AWS::AccountId} 
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders: ['*']
@@ -30,7 +32,6 @@ Resources:
             Status: Enabled
             ExpirationInDays: 1
 
-  # Lambda Execution Role
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -58,7 +59,6 @@ Resources:
                   - !GetAtt AudioBucket.Arn
                   - !Sub ${AudioBucket.Arn}/*
 
-  # API Gateway
   VoiceRecorderApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
@@ -67,7 +67,6 @@ Resources:
       EndpointConfiguration:
         Types: [REGIONAL]
 
-  # API Gateway Resource and Methods
   AudioResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -75,7 +74,212 @@ Resources:
       ParentId: !GetAtt VoiceRecorderApi.RootResourceId
       PathPart: audio
 
-  # Lambda Functions
+  AddResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref VoiceRecorderApi
+      ParentId: !Ref AudioResource
+      PathPart: add
+
+  AddMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref VoiceRecorderApi
+      ResourceId: !Ref AddResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AddAudioFunction.Arn}/invocations
+
+  MergeResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref VoiceRecorderApi
+      ParentId: !Ref AudioResource
+      PathPart: merge
+
+  MergeMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref VoiceRecorderApi
+      ResourceId: !Ref MergeResource
+      HttpMethod: PUT
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MergeAudioFunction.Arn}/invocations
+
+  RetrieveResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref VoiceRecorderApi
+      ParentId: !Ref AudioResource
+      PathPart: retrieve
+
+  RetrieveMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref VoiceRecorderApi
+      ResourceId: !Ref RetrieveResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetAudioFunction.Arn}/invocations
+
+  RemoveResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref VoiceRecorderApi
+      ParentId: !Ref AudioResource
+      PathPart: remove
+
+  RemoveMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref VoiceRecorderApi
+      ResourceId: !Ref RemoveResource
+      HttpMethod: DELETE
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteAudioFunction.Arn}/invocations
+
+  AddOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref VoiceRecorderApi
+      ResourceId: !Ref AddResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
+  MergeOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref VoiceRecorderApi
+      ResourceId: !Ref AddResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'PUT,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
+  RetrieveOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref VoiceRecorderApi
+      ResourceId: !Ref AddResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+  
+  RemoveOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref VoiceRecorderApi
+      ResourceId: !Ref AddResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'DELETE,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - AddMethod
+      - MergeMethod
+      - RetrieveMethod
+      - RemoveMethod
+      - AddOptionsMethod
+      - MergeOptionsMethod
+      - RetrieveOptionsMethod
+      - RemoveOptionsMethod
+    Properties:
+      RestApiId: !Ref VoiceRecorderApi
+
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      DeploymentId: !Ref ApiDeployment
+      RestApiId: !Ref VoiceRecorderApi
+      StageName: !Ref Environment
+
+  FFmpegLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      LayerName: !Sub ffmpeg-layer-${Environment}
+      Description: FFmpeg binaries for audio processing
+      Content:
+        S3Bucket: !Ref ArtifactBucket
+        S3Key: ffmpeg-layer.zip
+      CompatibleRuntimes:
+        - nodejs18.x
+      CompatibleArchitectures:
+        - x86_64
+
   AddAudioFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -98,6 +302,8 @@ Resources:
       Runtime: nodejs18.x
       MemorySize: 512
       Timeout: 180
+      Layers:
+        - !Ref FFmpegLayer
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:

@@ -1,22 +1,47 @@
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
+
 exports.handler = async (event) => {
-    try {
-        console.log('Event:', JSON.stringify(event));
-        
-        return {
-            statusCode: 200,
-            body: JSON.stringify({
-                message: 'Successfully retrieved audio',
-                event: event
-            })
-        };
-    } catch (error) {
-        console.error('Error:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                message: 'Error getting audio',
-                error: error.message
-            })
-        };
+  try {
+    const bucketName = process.env.BUCKET_NAME;
+    const sessionId = event.queryStringParameters?.sessionId;
+    
+    if (!sessionId) {
+      return {
+        statusCode: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Credentials': true,
+        },
+        body: JSON.stringify({ error: 'Missing sessionId parameter' })
+      };
     }
+
+    const key = `recordings/${sessionId}/merged.wav`;
+    await s3.deleteObject({
+      Bucket: bucketName,
+      Key: key
+    }).promise();
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: JSON.stringify({
+        message: 'Audio file deleted successfully'
+      })
+    };
+  } catch (error) {
+    console.error('Error:', error);
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: JSON.stringify({ error: 'Failed to delete audio file' })
+    };
+  }
 };

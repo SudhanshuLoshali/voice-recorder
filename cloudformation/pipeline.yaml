@@ -86,6 +86,7 @@ Resources:
             Value: !Ref Environment
           - Name: ARTIFACT_BUCKET
             Value: !Ref ArtifactBucket
+        PrivilegedMode: true
       Source:
         Type: CODEPIPELINE
         BuildSpec: buildspec.yml
@@ -216,6 +217,11 @@ Resources:
                 StackName: !Sub ${RepositoryName}-${Environment}
                 TemplatePath: BuildOutput::packaged.yaml
                 Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
+                ParameterOverrides: |
+                  {
+                    "Environment": "${Environment}",
+                    "ArtifactBucket": "${ArtifactBucket}"
+                  }
               InputArtifacts:
                 - Name: BuildOutput
 

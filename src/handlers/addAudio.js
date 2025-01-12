@@ -1,22 +1,62 @@
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
+
+const uploadToS3 = async (bucketName, key, body, contentType) => {
+  const params = {
+    Bucket: bucketName,
+    Key: key,
+    Body: body,
+    ContentType: contentType
+  };
+  return s3.upload(params).promise();
+};
+
 exports.handler = async (event) => {
-    try {
-        console.log('Event:', JSON.stringify(event));
-        
-        return {
-            statusCode: 200,
-            body: JSON.stringify({
-                message: 'Successfully added audio',
-                event: event
-            })
-        };
-    } catch (error) {
-        console.error('Error:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                message: 'Error adding audio',
-                error: error.message
-            })
-        };
+  try {
+    const bucketName = process.env.BUCKET_NAME;
+    const chunkId = event.queryStringParameters?.chunkId;
+    const sessionId = event.queryStringParameters?.sessionId;
+    
+    if (!chunkId || !sessionId) {
+      return {
+        statusCode: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Credentials': true,
+        },
+        body: JSON.stringify({ error: 'Missing chunkId or sessionId parameter' })
+      };
     }
+
+    // Decode base64 audio data from request body
+    const audioData = Buffer.from(JSON.parse(event.body).audioData, 'base64');
+    
+    // Upload to S3 with temporary path
+    const key = `temp/${sessionId}/chunk_${chunkId}.wav`;
+    await uploadToS3(bucketName, key, audioData, 'audio/wav');
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: JSON.stringify({
+        message: 'Audio chunk uploaded successfully',
+        chunkId,
+        sessionId,
+        key
+      })
+    };
+  } catch (error) {
+    console.error('Error:', error);
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: JSON.stringify({ error: 'Failed to process audio chunk' })
+    };
+  }
 };
