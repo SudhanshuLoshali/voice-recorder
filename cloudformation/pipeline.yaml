@@ -219,7 +219,7 @@ Resources:
                 Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
                 ParameterOverrides: |
                   {
-                    "ArtifactBucket": "${ArtifactBucket}"
+                    "ArtifactBucket": !Sub ${ArtifactBucket}  
                   }
               InputArtifacts:
                 - Name: BuildOutput
