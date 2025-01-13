@@ -88,7 +88,13 @@ exports.handler = async (event) => {
     }
 
     // Sort chunks by name to ensure correct order
-    chunkFiles.sort();
+    chunkFiles.sort((a, b) => {
+      const getChunkId = (filename) => {
+        const match = filename.match(/chunk_(\d+)/);
+        return match ? parseInt(match[1]) : 0;
+      };
+      return getChunkId(a) - getChunkId(b);
+    });
 
     // Create file list for ffmpeg
     const fileList = path.join(tmpDir, 'files.txt');
