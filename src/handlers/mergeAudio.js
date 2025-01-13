@@ -100,9 +100,9 @@ exports.handler = async (event) => {
       '/opt/nodejs/bin/ffmpeg' : 
       'ffmpeg';  // Use regular ffmpeg when testing locally
 
-    // Merge audio files using ffmpeg
+    // Merge audio files using ffmpeg with transcoding
     const outputPath = path.join(tmpDir, 'merged.wav');
-    await execPromise(`${ffmpegPath} -f concat -safe 0 -i ${fileList} -c copy ${outputPath}`);
+    await execPromise(`${ffmpegPath} -f concat -safe 0 -i ${fileList} -c:a pcm_s16le -ar 48000 -ac 1 ${outputPath}`);
 
     // Upload merged file to S3
     const mergedKey = `recordings/${sessionId}/merged.wav`;
