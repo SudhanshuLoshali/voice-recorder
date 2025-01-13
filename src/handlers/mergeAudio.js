@@ -66,7 +66,7 @@ exports.handler = async (event) => {
 
     // List all chunks for this session
     const chunks = await listS3Objects(bucketName, `temp/${sessionId}/`);
-    if (!chunks.Contents.length) {
+    if (!chunks.Contents || !chunks.Contents.length) {
       return {
         statusCode: 400,
         headers: {
@@ -95,9 +95,14 @@ exports.handler = async (event) => {
     const fileContent = chunkFiles.map(f => `file '${f}'`).join('\n');
     await fs.promises.writeFile(fileList, fileContent);
 
+    // Use ffmpeg from Lambda layer
+    const ffmpegPath = process.env.LAMBDA_TASK_ROOT ? 
+      '/opt/nodejs/bin/ffmpeg' : 
+      'ffmpeg';  // Use regular ffmpeg when testing locally
+
     // Merge audio files using ffmpeg
     const outputPath = path.join(tmpDir, 'merged.wav');
-    await execPromise(`ffmpeg -f concat -safe 0 -i ${fileList} -c copy ${outputPath}`);
+    await execPromise(`${ffmpegPath} -f concat -safe 0 -i ${fileList} -c copy ${outputPath}`);
 
     // Upload merged file to S3
     const mergedKey = `recordings/${sessionId}/merged.wav`;
@@ -134,7 +139,10 @@ exports.handler = async (event) => {
         'Access-Control-Allow-Headers': '*',
         'Access-Control-Allow-Credentials': true,
       },
-      body: JSON.stringify({ error: 'Failed to merge audio chunks' })
+      body: JSON.stringify({ 
+        error: 'Failed to merge audio chunks',
+        details: error.message 
+      })
     };
   }
 };
