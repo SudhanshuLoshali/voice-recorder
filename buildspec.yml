@@ -23,7 +23,6 @@ phases:
       - cp ffmpeg-*-amd64-static/ffmpeg nodejs/bin/
       - chmod 755 nodejs/bin/ffmpeg
 
-      # Create package.json for the layer
       - |
         echo '{
           "name": "ffmpeg-layer",
@@ -32,10 +31,8 @@ phases:
           "main": "index.js"
         }' > nodejs/package.json
 
-      # Create layer.zip
       - zip -r ffmpeg-layer.zip nodejs/
 
-      # Upload layer to S3
       - aws s3 cp ffmpeg-layer.zip s3://${ARTIFACT_BUCKET}/ffmpeg-layer.zip
       - cd ..
       
@@ -53,7 +50,6 @@ phases:
 artifacts:
   files:
     - packaged.yaml
-    - appspec.yml
     - cloudformation/*
     - dist/**/*
   discard-paths: no

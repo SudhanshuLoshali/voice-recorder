@@ -6,12 +6,6 @@ Parameters:
     Type: String
     Default: dev
     AllowedValues: [dev, qa]
-  RepositoryName:
-    Type: String
-    Default: voice-recorder
-  BranchName:
-    Type: String
-    Default: main
   GitHubOwner:
     Type: String
     Description: GitHub repository owner
@@ -66,14 +60,14 @@ Resources:
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
                 Resource:
-                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${RepositoryName}-${Environment}'
-                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${RepositoryName}-${Environment}:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${GitHubRepo}-${Environment}'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${GitHubRepo}-${Environment}:*'
 
   # CodeBuild Project
   BuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub ${RepositoryName}-${Environment}
+      Name: !Sub ${GitHubRepo}-${Environment}
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Artifacts:
         Type: CODEPIPELINE
@@ -166,7 +160,7 @@ Resources:
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: !Sub ${RepositoryName}-${Environment}
+      Name: !Sub ${GitHubRepo}-${Environment}
       RoleArn: !GetAtt PipelineServiceRole.Arn
       ArtifactStore:
         Type: S3
@@ -214,7 +208,7 @@ Resources:
               Configuration:
                 ActionMode: REPLACE_ON_FAILURE
                 RoleArn: !GetAtt PipelineServiceRole.Arn
-                StackName: !Sub ${RepositoryName}-${Environment}
+                StackName: !Sub ${GitHubRepo}-${Environment}
                 TemplatePath: BuildOutput::packaged.yaml
                 Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
                 ParameterOverrides: !Sub |

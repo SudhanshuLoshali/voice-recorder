@@ -18,12 +18,12 @@ Resources:
   AudioBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub ${BucketPrefix}-${Environment}-${AWS::AccountId} 
+      BucketName: !Sub ${BucketPrefix}-${Environment}-${AWS::AccountId}
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders: ['*']
             AllowedMethods: [GET, PUT, POST, DELETE]
-            AllowedOrigins: ['*']  # Replace with your frontend domain in production
+            AllowedOrigins: ['*']
             MaxAge: 3000
       LifecycleConfiguration:
         Rules:

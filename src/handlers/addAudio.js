@@ -1,15 +1,4 @@
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3();
-
-const uploadToS3 = async (bucketName, key, body, contentType) => {
-  const params = {
-    Bucket: bucketName,
-    Key: key,
-    Body: body,
-    ContentType: contentType
-  };
-  return s3.upload(params).promise();
-};
+const { uploadToS3 } = require('../utils/s3Helper');
 
 exports.handler = async (event) => {
   try {
@@ -30,7 +19,6 @@ exports.handler = async (event) => {
       };
     }
 
-    // Decode base64 audio data from request body
     const audioData = Buffer.from(JSON.parse(event.body).audioData, 'base64');
     
     // Upload to S3 with temporary path
