@@ -65,7 +65,7 @@ Resources:
       Name: !Sub voice-recorder-api-${Environment}
       Description: Voice Recorder API
       EndpointConfiguration:
-        Types: [REGIONAL]
+        Types: [EDGE]
 
   AudioResource:
     Type: AWS::ApiGateway::Resource
