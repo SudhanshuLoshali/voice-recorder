@@ -1,4 +1,4 @@
-const { uploadToS3 } = require('../utils/s3Helper');
+const { uploadToS3 } = require('./utils/s3Helper');
 
 exports.handler = async (event) => {
   try {

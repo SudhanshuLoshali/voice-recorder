@@ -2,7 +2,7 @@ const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
-const { downloadFromS3, uploadToS3, deleteS3Object, listS3Objects } = require('../utils/s3Helper');
+const { downloadFromS3, uploadToS3, deleteS3Object, listS3Objects } = require('./utils/s3Helper');
 
 const execPromise = util.promisify(exec);
 

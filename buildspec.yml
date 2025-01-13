@@ -13,6 +13,8 @@ phases:
       - npm install
       - cd src/handlers
       - npm install
+      - cd ../utils
+      - npm install
       - cd ../..
 
       # Create FFmpeg layer
@@ -58,3 +60,4 @@ cache:
   paths:
     - 'node_modules/**/*'
     - 'src/handlers/node_modules/**/*'
+    - 'src/utils/node_modules/**/*'
