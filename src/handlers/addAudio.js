@@ -1,4 +1,15 @@
-const { uploadToS3 } = require('./utils/s3Helper');
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
+
+const uploadToS3 = async (bucketName, key, body, contentType) => {
+  const params = {
+    Bucket: bucketName,
+    Key: key,
+    Body: body,
+    ContentType: contentType
+  };
+  return s3.upload(params).promise();
+};
 
 exports.handler = async (event) => {
   try {

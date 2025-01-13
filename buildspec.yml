@@ -13,8 +13,6 @@ phases:
       - npm install
       - cd src/handlers
       - npm install
-      - cd ../utils
-      - npm install
       - cd ../..
 
       # Create FFmpeg layer
@@ -41,14 +39,6 @@ phases:
   build:
     commands:
       - npm run build
-      - |
-        # Copy utils folder to each Lambda function's directory
-        for handler in src/handlers/*; do
-          if [ -d "$handler" ]; then
-            mkdir -p "$handler/utils"
-            cp -r src/utils/* "$handler/utils/"
-          fi
-        done
       - sam build -t cloudformation/resources.yaml
       
   post_build:
