@@ -1,0 +1,7 @@
+{
+    "name": "voice-recorder-handlers",
+    "version": "1.0.0",
+    "dependencies": {
+      "aws-sdk": "^2.1510.0"
+    }
+}

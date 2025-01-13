@@ -10,9 +10,11 @@ phases:
       
   pre_build:
     commands:
-      - cd src
-      - npm install
-      - cd ..
+      - npm ci
+
+      - cd src/handlers
+      - npm ci
+      - cd ../..
 
       # Create FFmpeg layer
       - mkdir -p ffmpeg-layer/nodejs/bin
@@ -40,9 +42,7 @@ phases:
       
   build:
     commands:
-      - cd src
       - npm run build
-      - cd ..
       - sam build -t cloudformation/resources.yaml
       
   post_build:
@@ -61,4 +61,5 @@ artifacts:
 
 cache:
   paths:
-    - 'src/node_modules/**/*'
+    - 'node_modules/**/*'
+    - 'src/handlers/node_modules/**/*'
