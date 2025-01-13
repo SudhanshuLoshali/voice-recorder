@@ -10,8 +10,9 @@ phases:
       
   pre_build:
     commands:
+      - npm install
       - cd src/handlers
-      - npm ci
+      - npm install
       - cd ../..
 
       # Create FFmpeg layer
