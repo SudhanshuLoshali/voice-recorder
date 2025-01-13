@@ -58,4 +58,3 @@ cache:
   paths:
     - 'node_modules/**/*'
     - 'src/handlers/node_modules/**/*'
-    - 'src/utils/node_modules/**/*'
